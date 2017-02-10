@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <link rel="stylesheet" type="text/css" href="css/jqm.css" />
+        <title>ALE</title>
+		<script type="application/javascript" src="js/fastclick.js"></script> 
+        <script type="application/javascript">
+            window.addEventListener('load', function () {
+                FastClick.attach(document.body);
+            }, false);
+        </script>         
+        
+    </head>
+    <body>
+        <div data-role="page" id="homePage">
+            <div data-role="header" data-id="headerBar" data-position="fixed">
+                <div class="mainLogo"><img src="img/mainLogo.png"></div>
+                <div class="searchWrap">
+                	<form class="searchForm">
+                         <label for="brochureSearch">Search brochures:</label>
+                         <input type="text" name="brochureSearch" class="brochureSearch" value=""><a href="#" class="ui-btn ui-mini ui-btn-inline ui-icon-search ui-btn-icon-left ui-corner-all">Search</a>
+                    </form>
+                </div>
+                <div class="basketWrap light">
+                	<!--<div class="yourBasket">
+                        <img class="basketicon" src="img/icons/basketicon.png">
+                        <p class="basketp">Your basket<br /><span class="basketCount">0</span> items</p>
+                    	<div class="clear"></div>
+                    </div>
+                    <div class="clear"></div>
+                	<a class="send light" href="basket.html">
+                    <img class="sendicon" src="img/icons/sendicon.png">
+                    <p>Send brochures</p>
+                	</a>-->
+                    <a class="send light" href="basket.html">
+                    <img class="sendicon" src="img/icons/sendicon.png">
+                    <p>Checkout</p>
+                    <p class="basketp"><span class="basketCount">0</span> items</p>
+                	</a>
+                </div>
+                
+            </div>
+			<div class="topImg">
+            	<img src="img/headerImg.png">
+            </div>
+            <div class="textStrip"><p>Using our mobile resource centre will allow for all the brochures you request from ALE to be sent to you on email for when you get back to your desk. <br />Please use the search box above or the sector listings below to look for the types of literature you require and simply drag and drop to your basket to be sent to you later.</p></div>
+            <div data-role="content">	
+				<div class="sectorsMenu">
+                
+                </div>		
+                		
+				<div class="corporateMenu">
+                	<a href="brochures.html" rel="corporate" class="light" data-transition="flow">Corporate<img src="img/plus.png" /></a>
+                	<a href="brochures.html" rel="equipment" class="light" data-transition="flow">Equipment<img src="img/plus.png" /></a>
+                	<a href="brochures.html" rel="country" class="light" data-transition="flow">Country<img src="img/plus.png" /></a>
+                </div>
+  				<div class="clear"></div>
+                <div class="allMenu">
+                    <a class="light" rel="all"  href="brochures.html" data-transition="flow">View All<img src="img/plus.png" /></a>
+                </div>
+  				<div class="clear"></div>
+				<a href="#" data-role="button" data-icon="refresh" data-iconpos="notext" id="refreshMenu">Refresh menu</a>
+            </div>
+            <div data-role="footer" data-id="headerBar" data-position="fixed">
+                <div class="footer">
+                	<a class="houseIconLink" href="index.html" data-transition="flow"><img class="houseIcon" src="img/houseIcon.png"></a>
+                    <a href="#popupDialog" data-role="button" data-icon="gear" data-rel="popup" data-iconpos="notext"  data-position-to="window" data-transition="pop">Admin</a>
+                </div>
+            </div>
+        </div>
+        <div data-role="popup" id="popupDialog" data-overlay-theme="b" data-theme="b" data-dismissible="false" style="max-width:400px;">
+            <div data-role="header" data-theme="a">
+            <h1>Enter password</h1>
+            </div>
+            <div role="main" class="ui-content">
+                <h3 class="ui-title">Please enter the password to reach the admin area</h3>
+                <input type="text" name="adminPassword" id="adminPassword" value="">
+                <a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-b" data-rel="back">Cancel</a>
+                <a href="#" id="enterAdmin" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-b" >Enter</a>
+            </div>
+        </div>
+        <script type="text/javascript" src="js/jquery.js"></script>
+        <script type="text/javascript" src="js/easing.js"></script>
+        <script type="text/javascript" src="js/jqm.js"></script>
+        <script type="text/javascript" src="js/jquery.animate-enhanced.js"></script>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+        
+        <script type="text/javascript">	
+            app.initialize();
+        </script>
+		<script>
+        /*$("#loginPage").on("pageinit", function(e) { removed because wwas trying to log in before ther app had finished loading phonegap. The handleLogin is now loaded on device ready
+            app.checkPreAuth();
+        });*/
+        </script>
+    </body>
+</html>

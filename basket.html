@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hello World</title>
+    </head>
+    <body>
+        <div data-role="page" id="basket">
+			<script type="text/javascript">
+				$(document).one('pagebeforeshow', '#basket', function () {
+					$("#basketList").empty();
+					get_basket(window.sessionStorage.getItem("basket"));
+					app.refreshBasket();
+					$(document).off("click", "#basketList .basketSingle .remove");					
+					$(document).off("click", "#submitButton");					
+					$(document).on('click', '#basketList .basketSingle .remove', function () {
+						var brochureID = $(this).parent().attr("id");
+						app.removeFromBasket(brochureID);
+						app.refreshBasket();
+						$(this).parent().fadeOut(250);
+					});	
+					$('#basket').on("click", "#submitButton", function(){
+						$(this).addClass('ui-disabled');
+						var name = $("#textinput-name").val();
+						var business = $("#textinput-business").val();
+						var country = $("#textinput-country").val();
+						var email = $("#textinput-email").val();
+						var brochureIDs = window.sessionStorage.getItem("basket");						
+						if(navigator && navigator.connection.type != Connection.NONE) { //internet connection so send order to server and then process emails etc
+							
+							app.sendBrochures(name, business, country, email, brochureIDs);
+						}else{ 
+							db.transaction(function(qry){ // new retailer account, so we add a new retailer with pending = 1. Not order pending = 1!! Because order pening = 1 means that the server retailer ID is already known.
+								qry.executeSql("INSERT INTO basket(brochures,name,business,country,email) VALUES('"+brochureIDs+"','"+name+"','"+business+"','"+country+"','"+email+"')", [],
+								function(tx, resultsa){
+									$("#submitForm form")[0].reset();
+									app.emptyBasket();
+									$("#basketList").empty();
+									navigator.notification.alert(
+										'Thank you! You will receive the brochures soon.', false, 'Success', 'Thanks!'
+									);
+								} );
+							},function(err){
+								alert("error: "+err.message)
+							},function(){
+							});	
+						}
+					});
+				});	
+				function get_basket(basket){
+					basket = basket.split(",");
+					db.transaction(function(ctx) {					
+						for (var i = 0; i < basket.length; i++) {
+							if(basket[i] == ""){
+								continue;	
+							}
+							var thisItem = basket[i];
+							ctx.executeSql("SELECT * FROM brochures WHERE token = '"+thisItem+"' ", [], function(tx,results) { //select all from phoneDB 
+								if(results.rows.length > 0) {
+									len = results.rows.length; 
+									for (var ix=0; ix<len; ix++){
+										$("#basketList").append("<li class='basketSingle dark' id='"+results.rows.item(ix).token+"'><img class='arrow' src='img/basketArrows.png' />"+results.rows.item(ix).name+"<span class='remove'>x</span></li>");
+									}
+								}
+							});
+						}
+					}, function(err){
+						app.transactionError(err);
+					});
+				}
+        	</script>
+            <div data-role="header" data-id="headerBar" data-position="fixed">
+                <div class="mainLogo"><img src="img/mainLogo.png"></div>
+                <div class="searchWrap">
+                	<form class="searchForm">
+                         <label for="brochureSearch">Search brochures:</label>
+                         <input type="text" name="brochureSearch" class="brochureSearch" value=""><a href="#" class="ui-btn ui-mini ui-btn-inline ui-icon-search ui-btn-icon-left ui-corner-all">Search</a>
+                    </form>
+                </div>
+                <div class="basketWrap light">
+                    <a class="send light" href="basket.html">
+                    <img class="sendicon" src="img/icons/sendicon.png">
+                    <p>Checkout</p>
+                    <p class="basketp"><span class="basketCount">0</span> items</p>
+                	</a>
+                </div>
+            </div>
+			<div class="topImg">
+            	<img src="img/yourDetailsImg.png">
+                <div id="basketContents">
+					<div class="menuLine"></div>
+                    <div class="currentCategory light">You've chosen...</div>
+                    <ul id="basketList"></ul>
+                </div>
+                
+            </div>
+            <div data-role="content">
+				<div id="submitForm">
+                	<form>
+                        <div class="ui-field-contain">
+                            <label class="dark" for="textinput-name">Name:</label>
+                            <input type="text" name="textinput-name" id="textinput-name" placeholder="Name" value="">
+                        </div>              
+                        <div class="ui-field-contain">
+                            <label class="dark" for="textinput-business">Business Name:</label>
+                            <input type="text" name="textinput-business" id="textinput-business" placeholder="Business Name" value="">
+                        </div>              
+                        <div class="ui-field-contain">
+                            <label class="dark" for="textinput-country">Country:</label>
+                            <input type="text" name="textinput-country" id="textinput-country" placeholder="Country" value="">
+                        </div>              
+                        <div class="ui-field-contain">
+                            <label class="dark" for="textinput-email">Email:</label>
+                            <input type="text" name="textinput-email" id="textinput-email" placeholder="Email" value="">
+                        </div>              
+                        <a id="submitButton" href="#" class="ui-btn ui-mini ui-btn-inline ui-icon-action ui-btn-icon-left ui-corner-all">Send</a>
+                              
+                    </form>
+                
+                </div>
+
+            </div>
+            <div data-role="footer" data-id="headerBar" data-position="fixed">
+                <div class="footer">
+                	<a class="houseIconLink" href="index.html" data-transition="flow"><img class="houseIcon" src="img/houseIcon.png"></a>
+                    <a href="#popupDialog" data-rel="popup" data-position-to="window" data-transition="pop" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-icon-gear ui-btn-icon-left ui-btn-b">Admin</a>
+                </div>
+            </div>
+            
+        </div>
+    </body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hello World</title>
+    </head>
+    <body>
+        <div data-role="page" id="brochures">
+			<script type="text/javascript">
+				$(document).one('pagebeforeshow', '#brochures', function () {
+					$("#brochuresList").empty();
+
+					//sessionStorage.removeItem("searchResults")
+					if(window.sessionStorage.getItem("searchResults") === null){
+						get_brochures(window.sessionStorage.getItem("category"));
+					}else if(window.sessionStorage.getItem("searchResults") == ""){
+						get_brochures_search(0);
+					}else{
+						get_brochures_search(window.sessionStorage.getItem("searchResults"));
+					}
+					
+					
+					$(document).off("click", "#brochuresList a");
+					$(document).off("click", ".tapicon");
+					$(document).off("click", ".eyeicon");
+					$(document).on("click", ".eyeicon", function(){
+					  window.open($(this).attr('rel'), '_blank', 'location=no,closebuttoncaption=Close,enableViewportScale=yes')
+					});
+					$(document).on("click", ".tapicon", function(){
+						var brochureID = $(this).attr("rel");
+						if(brochureID > 0){
+							app.updateBasket(brochureID);
+							app.refreshBasket();
+						}
+					});
+					app.refreshBasket();
+				});	
+				function tabSystem(){
+					$('#brochuresList a:not(:first)').addClass('inactive');
+					$('.tabContainer').hide();
+					$('.tabContainer:first').show();
+					$('.tabContainerDescription').hide();
+					$('.tabContainerDescription:first').show();
+					$(document).on("click", "#brochuresList a", function(){
+						var t = $(this).attr('id');
+						if($(this).hasClass('inactive')){ 
+							$('#brochuresList a').addClass('inactive');           
+							$(this).removeClass('inactive');
+							
+							$('.tabContainer').hide();
+							$('.tabContainerDescription').hide();
+							$('#'+ t + 'C').fadeIn('slow');
+							$('#'+ t + 'CD').fadeIn('slow');
+						}
+						//change icons when tab is changed
+						$(".eyeicon").attr("rel", $(this).attr('rel'));
+						$(".tapicon").attr("rel", $(this).attr('id'));
+					});		
+					$(".eyeicon").attr("rel", $('#brochuresList a:first').attr('rel'));			
+					$(".tapicon").attr("rel", $('#brochuresList a:first').attr('id'));			
+				}
+				function get_brochures(category){
+					console.log(category);
+					if(category == "corporate"){
+						$(".currentCategory").html('Corporate');
+					}
+					if(category == "equipment"){
+						$(".currentCategory").html('Equipment');
+					}
+					if(category == "country"){
+						$(".currentCategory").html('Countries');
+					}
+
+					if(category == "all"){
+						$(".currentCategory").html('Showing All');
+						db.transaction(function(ctx) {
+							ctx.executeSql("SELECT * FROM brochures ", [], function(tx,results) { //select all from phoneDB 
+								if(results.rows.length > 0) {
+									len = results.rows.length; 
+									for (var i=0; i<len; i++){ 
+										$("#brochuresList").append("<a id='"+results.rows.item(i).token+"' class='"+results.rows.item(i).token+"' href='#' rel='"+results.rows.item(i).url+"' data-role='button' data-theme='a' data-inline='true'><li class='light'>"+results.rows.item(i).name+"</li></a>");
+										$("#brochurePageRight").append("<div class='tabContainer' id='"+results.rows.item(i).token+"C' ><img class='previewImg' src='"+results.rows.item(i).urlPreview+"' /></div>");
+										$("#brochureDescription .descriptionBody").append("<div class='tabContainerDescription' id='"+results.rows.item(i).token+"CD' >"+results.rows.item(i).description+"</div>");
+									}
+									tabSystem();
+								}else{
+									$("#brochuresList").append("<p>Sorry, there are no brochures avaliable in this category.</p>");
+								}
+							});
+						}, function(err){
+							app.transactionError(err);
+						});
+					}else{
+						app.updateBrochuresCategory(category);
+						
+						db.transaction(function(ctx) {
+							ctx.executeSql("SELECT * FROM brochures WHERE sector = '"+category+"' ", [], function(tx,results) { //select all from phoneDB 
+								if(results.rows.length > 0) {
+									len = results.rows.length; 
+									for (var i=0; i<len; i++){ 
+										$("#brochuresList").append("<a id='"+results.rows.item(i).token+"' class='"+results.rows.item(i).token+"' href='#' rel='"+results.rows.item(i).url+"' data-role='button' data-theme='a' data-inline='true'><li class='light'>"+results.rows.item(i).name+"</li></a>");
+										$("#brochurePageRight").append("<div class='tabContainer' id='"+results.rows.item(i).token+"C' ><img class='previewImg' src='"+results.rows.item(i).urlPreview+"' /></div>");
+										$("#brochureDescription .descriptionBody").append("<div class='tabContainerDescription' id='"+results.rows.item(i).token+"CD' >"+results.rows.item(i).description+"</div>");
+									}
+									tabSystem();
+								}else{
+									$("#brochuresList").append("<p>Sorry, there are no brochures avaliable in this category.</p>");
+								}
+							});
+						}, function(err){
+							app.transactionError(err);
+						});
+					}
+					
+				}
+				
+				function get_brochures_search(brochures){
+					$(".currentCategory").html('Search...');
+					if(brochures === 0){
+						$("#brochuresList").append("No results");
+					}else{
+						var arr = brochures.split(",");
+						console.log(arr);
+						db.transaction(function(ctx) {
+							for (var x=0; x<arr.length; x++){ 
+								var theID = arr[x];
+								ctx.executeSql("SELECT * FROM brochures WHERE ID = '"+theID+"' ", [], function(tx,results) { //select all from phoneDB 
+									if(results.rows.length > 0) {
+										len = results.rows.length; 
+										for (var i=0; i<len; i++){ 
+											console.log(results.rows.item(i).token);
+											$("#brochuresList").append("<a id='"+results.rows.item(i).token+"' class='"+results.rows.item(i).token+"' href='#' rel='"+results.rows.item(i).url+"' data-role='button' data-theme='a' data-inline='true'><li class='light'>"+results.rows.item(i).name+"</li></a>");
+											$("#brochurePageRight").append("<div class='tabContainer' id='"+results.rows.item(i).token+"C' ><img class='previewImg' src='"+results.rows.item(i).urlPreview+"' /></div>");
+											$("#brochureDescription .descriptionBody").append("<div class='tabContainerDescription' id='"+results.rows.item(i).token+"CD' >"+results.rows.item(i).description+"</div>");
+										}
+										tabSystem();
+									}
+								});
+							}
+						}, function(err){
+							app.transactionError(err);
+						});
+					}
+				}
+        	</script>
+            <div data-role="header" data-id="headerBar" data-position="fixed">
+                <div class="mainLogo"><img src="img/mainLogo.png"></div>
+                <div class="searchWrap">
+                	<form class="searchForm">
+                         <label for="brochureSearch">Search brochures:</label>
+                         <input type="text" name="brochureSearch" class="brochureSearch" value=""><a href="#" class="ui-btn ui-mini ui-btn-inline ui-icon-search ui-btn-icon-left ui-corner-all">Search</a>
+                    </form>
+                </div>
+                <div class="basketWrap light">
+                    <a class="send light" href="basket.html">
+                    <img class="sendicon" src="img/icons/sendicon.png">
+                    <p>Checkout</p>
+                    <p class="basketp"><span class="basketCount">0</span> items</p>
+                	</a>
+                </div>
+            </div>
+            <div data-role="content">
+            	<div id="brochurePageLeft">
+                    <div id="brochureMenu">
+                        <div class="menuLine"></div>
+                        <div class="currentCategory light">--</div>
+                        <ul id="brochuresList"></ul>
+                    </div>
+                    <div id="brochureOptions">
+                    	<span>
+                    	<p class="lightgrey">Add to your basket by tapping the icon below</p>
+                    	<img class="tapicon" src="img/icons/tapicon.png" />
+                        </span>
+                        <span>
+                    	<p class="lightgrey">Preview the brochure by tapping the icon below</p>
+                    	<img class="eyeicon" src="img/icons/eyeicon.png" />
+                    	</span>
+                    </div>
+                    
+                    
+                    <div class="clear"></div>
+                	<div id="brochureDescription">
+                    	<div class="descriptionHead"><h2>Overview:</h2></div>
+                    	<div class="descriptionBody"></div>
+                    </div>
+                </div>
+                <div id="brochurePageRight">
+                </div>
+            </div>
+            <div data-role="footer" data-id="headerBar" data-position="fixed">
+                <div class="footer">
+                	<a class="houseIconLink" href="index.html" data-transition="flow"><img class="houseIcon" src="img/houseIcon.png"></a>
+                    <a href="#popupDialog" data-rel="popup" data-position-to="window" data-transition="pop" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-icon-gear ui-btn-icon-left ui-btn-b">Admin</a>
+                </div>
+            </div>
+            
+        </div>
+    </body>
+</html>

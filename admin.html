@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hello World</title>
+    </head>
+    <body>
+        <div data-role="page" id="admin">
+			<script type="text/javascript">
+				function showBasketAdmin(){
+					db.transaction(function(ctx) {					
+						ctx.executeSql("SELECT * FROM basket", [], function(tx,results) { //select all from phoneDB 
+							$("#basketList table tbody").empty();
+							if(results.rows.length > 0) {
+								len = results.rows.length; 
+								for (var i=0; i<len; i++){
+									$("#basketList table tbody").append('<tr><td>'+results.rows.item(i).name+'</td><td>'+results.rows.item(i).business+'</td><td>'+results.rows.item(i).country+'</td><td>'+results.rows.item(i).email+'</td><td>'+results.rows.item(i).brochures+'</td></tr>');
+								}
+							}else{
+								$("#basketList table tbody").append("<p>There are no brochures waiting to be sent out</p>");
+							}
+						});
+					}, function(err){
+						app.transactionError(err);
+					});
+				}
+				$(document).one('pagebeforeshow', '#admin', function () {
+					showBasketAdmin();
+				});	
+				$(document).on('pageshow', '#admin', function () {
+					$(document).off("click", "#sendBrochuresSaved");	
+					$(document).on("click", "#sendBrochuresSaved", function(){
+						var orderDetails = [];
+						db.transaction(function(qry){
+							qry.executeSql("SELECT * FROM basket ", [], function(tx, results){
+								len = results.rows.length; //if rows.length, means retailer is pending so add details to array. If no length, means retailer exists
+								for (var i=0; i<len; i++){ 
+									orderDetails[i] = {};
+									orderDetails[i]['id'] = results.rows.item(i).ID;
+									orderDetails[i]['name'] = results.rows.item(i).name;
+									orderDetails[i]['business'] = results.rows.item(i).business;
+									orderDetails[i]['country'] = results.rows.item(i).country;
+									orderDetails[i]['email'] = results.rows.item(i).email;
+									orderDetails[i]['brochures'] = results.rows.item(i).brochures;
+								}				
+							});
+						},function(err){
+							app.transactionError(err);
+						}, function(){
+							$.each(orderDetails, function(i, val) {
+								
+								var name = val.name;
+								var business = val.business;
+								var country = val.country;
+								var email = val.email;
+								var brochures = val.brochures;
+								
+								$.ajax({
+									type: "POST",
+									cache: false,
+									url: "https://www.indigoapps.co.uk/ale/admin/brochures/send_brochures",
+									data: { name: name, business: business, country: country, email: email, brochures: brochures},
+									dataType: "json",
+									success: function(result){
+										if(result == 1){
+											$("#sentTo").append('<p>Sent to '+val.email+'</p>');
+											db.transaction(function(q) {
+												q.executeSql("delete from basket where ID = '"+val.id+"'", [], function(){
+													showBasketAdmin();
+												});
+											});
+										}else{
+											$("#sentTo").append('<p>FAILED to '+val.email+'</p>');
+										}
+									}
+								})
+							});
+						});
+					});
+ 				});	
+       	</script>
+            <div data-role="header" data-id="headerBar" data-position="fixed">
+                <div class="mainLogo"><img src="img/mainLogo.png"></div>
+                <div class="searchWrap">
+                	<form class="searchForm">
+                         <label for="brochureSearch">Search brochures:</label>
+                         <input type="text" name="brochureSearch" class="brochureSearch" value=""><a href="#" class="ui-btn ui-mini ui-btn-inline ui-icon-search ui-btn-icon-left ui-corner-all">Search</a>
+                    </form>
+                </div>
+                <div class="basketWrap light">
+                    <a class="send light" href="basket.html">
+                    <img class="sendicon" src="img/icons/sendicon.png">
+                    <p>Checkout</p>
+                    <p class="basketp"><span class="basketCount">0</span> items</p>
+                	</a>
+                </div>
+            </div>
+            <div data-role="content">
+				<div id="basketList">
+                	<table data-role="table" id="table-column-toggle" data-mode="columntoggle" class="ui-responsive table-stroke">
+                        <thead>
+                            <tr>
+                                 <th>Name</th>
+                                 <th>Business</th>
+                                 <th>Country</th>
+                                 <th>Email</th>
+                                 <th>Brochures</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        
+                		</tbody>
+                    </table>
+                </div>
+                <a data-role="button" id="sendBrochuresSaved" href="#">Send brochures</a>
+                <a data-role="button" id="resetDB" href="#">Reset database</a>
+                <a data-role="button" id="syncDB" href="#">Sync database</a>
+				<div id="sentTo">
+                </div>
+            </div>
+            <div data-role="footer" data-id="headerBar" data-position="fixed">
+                <div class="footer">
+                	<a class="houseIconLink" href="index.html" data-transition="flow"><img class="houseIcon" src="img/houseIcon.png"></a>
+                    <a href="#popupDialog" data-rel="popup" data-position-to="window" data-transition="pop" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-icon-gear ui-btn-icon-left ui-btn-b">Admin</a>
+                </div>
+            </div>
+            
+        </div>
+    </body>
+</html>
